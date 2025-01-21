@@ -9,6 +9,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -62,4 +63,22 @@ public class ToDoController {
         toDoRepository.save(toDoItem);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/details")
+    public ResponseEntity<List<ToDoItem>> getAllDetails() {
+        return ResponseEntity.ok(toDoRepository.findAllWithDetails());
+    }
+
+    // 2. Explicit column selection endpoint
+    @GetMapping("/basic")
+    public ResponseEntity<List<ToDoRepository.ToDoBasicDetails>> getBasicDetails() {
+        return ResponseEntity.ok(toDoRepository.findAllBasicDetails());
+    }
+
+    // 3. Complex selection with computed fields endpoint
+    @GetMapping("/computed")
+    public ResponseEntity<List<ToDoRepository.ToDoComputedDetails>> getComputedDetails() {
+        return ResponseEntity.ok(toDoRepository.findAllWithComputedFields());
+    }
+
 }
