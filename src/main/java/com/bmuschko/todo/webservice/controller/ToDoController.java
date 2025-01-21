@@ -65,21 +65,20 @@ public class ToDoController {
     }
 
     @GetMapping("/details")
-    public ResponseEntity<List<Map<String, Object>>> getAllDetails() {
+    public ResponseEntity<List<ToDoItem>> getAllDetails() {
         return ResponseEntity.ok(toDoRepository.findAllWithDetails());
     }
 
     // 2. Explicit column selection endpoint
     @GetMapping("/basic")
-    public ResponseEntity<List<Map<String, Object>>> getBasicDetails() {
+    public ResponseEntity<List<ToDoRepository.ToDoBasicDetails>> getBasicDetails() {
         return ResponseEntity.ok(toDoRepository.findAllBasicDetails());
     }
 
     // 3. Complex selection with computed fields endpoint
     @GetMapping("/computed")
-    public ResponseEntity<List<Map<String, Object>>> getComputedDetails() {
+    public ResponseEntity<List<ToDoRepository.ToDoComputedDetails>> getComputedDetails() {
         return ResponseEntity.ok(toDoRepository.findAllWithComputedFields());
     }
-
 
 }
