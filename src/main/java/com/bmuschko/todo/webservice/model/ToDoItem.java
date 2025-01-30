@@ -1,29 +1,18 @@
 package com.bmuschko.todo.webservice.model;
 
-import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 @Entity
-@Table(name = "todo_item")
 public class ToDoItem implements Comparable<ToDoItem> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-
-    @Column(name = "name")
     private String name;
-
-    @Column(name = "completed")
     private boolean completed;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 
     public Long getId() {
         return id;
@@ -49,33 +38,6 @@ public class ToDoItem implements Comparable<ToDoItem> {
         this.completed = completed;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    // Computed fields with default values
-    public String getStatus() {
-        if (name == null) {
-            return "Unknown";
-        }
-        return completed ? "Done" : "Pending";
-    }
-
-    public Integer getNameLength() {
-        return name != null ? name.length() : 0;
-    }
-
-    public String getFullDescription() {
-        if (name == null) {
-            return "Untitled Task (Unknown)";
-        }
-        return String.format("%s (%s)", name, getStatus());
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -85,7 +47,9 @@ public class ToDoItem implements Comparable<ToDoItem> {
 
         if (completed != that.completed) return false;
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
-        return name != null ? name.equals(that.name) : that.name == null;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+
+        return true;
     }
 
     @Override
@@ -103,7 +67,6 @@ public class ToDoItem implements Comparable<ToDoItem> {
 
     @Override
     public String toString() {
-        return String.format("%d: %s [completed: %b, created: %s]",
-                id, name != null ? name : "Untitled", completed, createdAt);
+        return id + ": " + name + " [completed: " + completed + "]";
     }
 }
