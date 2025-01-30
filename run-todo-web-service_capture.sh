@@ -1,13 +1,8 @@
+./add-environment-variables.sh
+
 export ENABLE_EXTENSION=true;
 export EXTENSION_MODE=capture;
 export GO_SERVER_BASE_URL=https://app.baserock.ai/it/leService;
-export PUBLISHER_MODE=RabbitMQ;
-export SERVICE_NAME=todo-web-service;
-export MQ_HOST=localhost;
-export MQ_PORT=5673;
-export MQ_QUEUE=learning_engine_test_queue;
-export MQ_USER=user;
-export MQ_PASSWORD=<password>
 
 
 java -javaagent:/Users/saharshbasal/Development/git_main/testing/todo-web-service/src/main/resources/opentelemetry-javaagent.jar \
