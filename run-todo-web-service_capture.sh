@@ -1,5 +1,13 @@
 source ./add-environment-variables.sh
 
+if [ -z "$SERVICE_NAME" ]; then
+    echo "Error: SERVICE_NAME is not set."
+    echo "Please set it using: export SERVICE_NAME=<your_service_name>"
+    exit 1
+else
+    echo "SERVICE_NAME is set to '$SERVICE_NAME'."
+fi
+
 export ENABLE_EXTENSION=true;
 export EXTENSION_MODE=capture;
 export GO_SERVER_BASE_URL=https://app.baserock.ai/it/leService;
