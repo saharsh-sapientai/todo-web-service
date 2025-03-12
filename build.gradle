@@ -17,7 +17,25 @@ repositories {
     jcenter()
     mavenCentral()
 }
+task webServiceSimulate(type: Exec) { commandLine 'bash', './run-todo-web-service_simulate.sh' }
+
 task runSimulation(type: Exec) { commandLine 'bash', './run-simulation.sh' }
+
+task runWebServiceAndSimulation {
+    doLast {
+        println 'Starting webServiceSimulate...'
+        def process = ["bash", "./run-todo-web-service_simulate.sh"].execute()
+
+        println 'Waiting for 45 seconds before running simulation...'
+        sleep(45000) // Wait for 45 seconds
+
+        println 'Running runSimulation now...'
+        exec {
+            commandLine 'bash', './run-simulation.sh'
+        }
+    }
+}
+
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
