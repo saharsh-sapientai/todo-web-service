@@ -13,8 +13,11 @@ export EXTENSION_MODE=simulate;
 export GO_SERVER_BASE_URL=https://app.baserock.ai/it/leService;
 
 CURRENT_DIR=$(pwd)
+cp ${CURRENT_DIR}/src/main/resources/jacocoagent.jar ${CURRENT_DIR}/jacocoagent.jar
 
-java -javaagent:${CURRENT_DIR}/src/main/resources/opentelemetry-javaagent.jar \
+java \
+ -javaagent:${CURRENT_DIR}/jacocoagent.jar=destfile=jacoco.exec \
+ -javaagent:${CURRENT_DIR}/src/main/resources/opentelemetry-javaagent.jar \
  -Dotel.resource.attributes=service.name=${SERVICE_NAME} \
  -Dotel.javaagent.extensions=${CURRENT_DIR}/src/main/resources/sapient-otel-extension-1.0-all.jar \
  -Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=off \

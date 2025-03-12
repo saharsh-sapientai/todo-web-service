@@ -17,6 +17,7 @@ repositories {
     jcenter()
     mavenCentral()
 }
+task runSimulation(type: Exec) { commandLine 'bash', './run-simulation.sh' }
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
