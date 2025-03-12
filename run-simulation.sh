@@ -1,7 +1,7 @@
 export LE_SERVICE_URL=https://app.baserock.ai/it/leService
 export SERVICE_UNDER_TEST_URL=http://localhost:8080
 export PROTOCOL=rest
-export SERVICE_NAME=todo-service-dev-testing;
+export SERVICE_NAME=todo-service-vikas;
 
 # Check if SERVICE_NAME is set
 if [ -z "$SERVICE_NAME" ]; then
@@ -23,9 +23,33 @@ if [ $API_AUTOMATION_STATUS -ne 0 ]; then
 fi
 
 # Stop the running simulation
+sleep 10
 echo "Stopping the simulation..."
-pkill -f run-do-do-web-service_simulation.sh
+PID=$(pgrep -f run-do-do-web-service_simulation.sh)
+if [ -n "$PID" ]; then
+    echo "Process found with PID: $PID"
+    pkill -f run-do-do-web-service_simulation.sh
+    echo "Process killed."
+else
+    echo "No matching process found."
+fi
 
+
+sleep 10
+PID=$(pgrep -f 'java .*todo-web-service-1.0.0.jar' | head -n 1)
+
+if [ -n "$PID" ]; then
+    echo "Dumping JaCoCo execution data..."
+    jcmd "$PID" JaCoCo.dump
+    sleep 5  # Give some time for the dump to complete
+
+    echo "Killing process with PID: $PID"
+    kill -15 "$PID"
+else
+    echo "No matching process found to kill."
+fi
+
+sleep 10
 # Generate JaCoCo coverage report
 echo "Generating JaCoCo coverage report..."
 java -jar src/main/resources/jacococli.jar report jacoco.exec \
