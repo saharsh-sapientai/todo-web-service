@@ -1,7 +1,6 @@
 export LE_SERVICE_URL=https://app.baserock.ai/it/leService
 export SERVICE_UNDER_TEST_URL=http://localhost:8080
 export PROTOCOL=rest
-export SERVICE_NAME=todo-service-vikas;
 
 # Check if SERVICE_NAME is set
 if [ -z "$SERVICE_NAME" ]; then
