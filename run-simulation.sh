@@ -11,6 +11,15 @@ else
     echo "SERVICE_NAME is set to '$SERVICE_NAME'."
 fi
 
+# Check if ENVIRONMENT is set
+if [ -z "$ENVIRONMENT" ]; then
+    echo "Error: ENVIRONMENT is not set."
+    echo "Please set it using: export ENVIRONMENT=<environment>"
+    exit 1
+else
+    echo "ENVIRONMENT is set to '$ENVIRONMENT'."
+fi
+
 # Run API automation and wait for it to finish
 echo "Running API automation..."
 ./api_automation_binary "${SERVICE_NAME}" ""
