@@ -6,7 +6,7 @@ on:
       service_name:
         description: 'Existing Baserock service identifier'
         required: false
-        default: 'todo-500'
+        default: 'todo-900'
       environment:
         description: 'Environment label passed to the agent'
         required: false
@@ -35,7 +35,7 @@ jobs:
           --health-retries 5
     env:
       BASEROCK_CONTROL_PLANE: https://app.baserock.ai/
-      SERVICE_NAME: ${{ github.event.inputs.service_name || 'todo-600' }}
+      SERVICE_NAME: ${{ github.event.inputs.service_name || 'todo-900' }}
       SERVICE_UNDER_TEST_URL: ${{ github.event.inputs.service_url || 'http://127.0.0.1:8090' }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'prod' }}
       POSTGRES_PORT: 5432
