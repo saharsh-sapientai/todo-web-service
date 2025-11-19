@@ -1,0 +1,133 @@
+name: Baserock REST Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      service_name:
+        description: 'Existing Baserock service identifier'
+        required: false
+        default: 'todo-500'
+      environment:
+        description: 'Environment label passed to the agent'
+        required: false
+        default: 'prod'
+      service_url:
+        description: 'Base URL for the todo service'
+        required: false
+        default: 'http://127.0.0.1:8090'
+
+jobs:
+  run-baserock-rest-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: todo
+          POSTGRES_USER: todo
+          POSTGRES_PASSWORD: todo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U todo"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      BASEROCK_CONTROL_PLANE: https://app.baserock.ai/
+      SERVICE_NAME: ${{ github.event.inputs.service_name || 'todo-600' }}
+      SERVICE_UNDER_TEST_URL: ${{ github.event.inputs.service_url || 'http://127.0.0.1:8090' }}
+      ENVIRONMENT: ${{ github.event.inputs.environment || 'prod' }}
+      POSTGRES_PORT: 5432
+      SERVICE_DB_USERNAME: todo
+      SERVICE_DB_PASSWORD: todo
+      SERVICE_JDBC_URL: jdbc:postgresql://localhost:5432/todo
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Prepare executables
+        run: |
+          chmod +x ./gradlew
+          chmod +x ./baserock_agent_linux
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Build application
+        run: ./gradlew clean bootJar
+
+      - name: Wait for Postgres readiness
+        run: |
+          for attempt in {1..20}; do
+            if pg_isready -h localhost -p "$POSTGRES_PORT" -U "$SERVICE_DB_USERNAME"; then
+              exit 0
+            fi
+            echo "Postgres not ready yet (attempt $attempt/20). Retrying in 3s..."
+            sleep 3
+          done
+          echo "Postgres failed to become ready."
+          exit 1
+      - name: Start todo service (prod profile)
+        run: |
+          JAR_FILE=$(ls build/libs/todo-web-service-*.jar | grep -v plain | head -n 1)
+          if [ -z "$JAR_FILE" ]; then
+            echo "Unable to locate executable Spring Boot jar."
+            exit 1
+          fi
+          export SPRING_PROFILES_ACTIVE=prod
+          export SPRING_DATASOURCE_URL="$SERVICE_JDBC_URL"
+          export SPRING_DATASOURCE_USERNAME="$SERVICE_DB_USERNAME"
+          export SPRING_DATASOURCE_PASSWORD="$SERVICE_DB_PASSWORD"
+          nohup java -jar "$JAR_FILE" > todo-service.log 2>&1 &
+          echo $! > todo-service.pid
+      - name: Wait for service readiness
+        run: |
+          HEALTH_ENDPOINT="${SERVICE_UNDER_TEST_URL%/}/actuator/health"
+          echo "Waiting for service at $HEALTH_ENDPOINT"
+          for attempt in {1..24}; do
+            if curl -sf "$HEALTH_ENDPOINT" > /dev/null; then
+              echo "Service is ready."
+              exit 0
+            fi
+            echo "Attempt $attempt/24: service not ready yet, retrying in 5s..."
+            sleep 5
+          done
+          echo "Service failed to become ready in time."
+          cat todo-service.log || true
+          exit 1
+      - name: Run Baserock agent tests
+        env:
+          BASEROCK_API_KEY: ${{ secrets.BASEROCK_API_KEY }}
+        run: |
+          if [ -z "$BASEROCK_API_KEY" ]; then
+            echo "Missing BASEROCK_API_KEY secret."
+            exit 1
+          fi
+          ./baserock_agent_linux \
+            --service="$SERVICE_NAME" \
+            --run-tests \
+            --protocol=rest \
+            --service-url="$SERVICE_UNDER_TEST_URL" \
+            --env="$ENVIRONMENT"
+      - name: Upload service logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: todo-service-log
+          path: todo-service.log
+          if-no-files-found: ignore
+
+      - name: Stop todo service
+        if: always()
+        run: |
+          if [ -f todo-service.pid ]; then
+            kill $(cat todo-service.pid) || true
+            rm -f todo-service.pid
+          fi
