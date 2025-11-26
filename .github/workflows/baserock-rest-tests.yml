@@ -15,6 +15,22 @@ on:
         description: 'Base URL for the todo service'
         required: false
         default: 'http://127.0.0.1:8090'
+      baserock_control_plane:
+        description: 'Control plane URL'
+        required: true
+        default: 'https://app.baserock.ai/'
+        type: choice
+        options:
+          - https://app.baserock.ai/
+          - https://app.dev.onprem.baserock.ai/
+      baserock_api_secret:
+        description: 'GitHub secret containing the API key'
+        required: true
+        default: 'BASEROCK_API_KEY'
+        type: choice
+        options:
+          - BASEROCK_API_KEY
+          - BASEROCK_ONPREM_API_KEY
 
 jobs:
   run-baserock-rest-tests:
@@ -34,7 +50,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
-      BASEROCK_CONTROL_PLANE: https://app.baserock.ai/
+      BASEROCK_CONTROL_PLANE: ${{ github.event.inputs.baserock_control_plane || 'https://app.baserock.ai/' }}
       SERVICE_NAME: ${{ github.event.inputs.service_name || 'todo-900' }}
       SERVICE_UNDER_TEST_URL: ${{ github.event.inputs.service_url || 'http://127.0.0.1:8090' }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'prod' }}
@@ -108,7 +124,7 @@ jobs:
 
       - name: Run Baserock agent tests
         env:
-          BASEROCK_API_KEY: ${{ secrets.BASEROCK_API_KEY }}
+          BASEROCK_API_KEY: ${{ secrets[github.event.inputs.baserock_api_secret || 'BASEROCK_API_KEY'] }}
         run: |
           if [ -z "$BASEROCK_API_KEY" ]; then
             echo "Missing BASEROCK_API_KEY secret."
